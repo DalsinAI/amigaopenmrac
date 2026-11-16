@@ -1,0 +1,102 @@
+# OpenMRac for GFOS (AmigaOS 3.2 with GFOpenUp), 68040/68060 + FPU, on
+# GFOpenUp's SDL 2 and OpenGL (LIBS:GFOpenGPU/SDL2.module, SDL2_image.module
+# and GL.module).
+#
+#   make -f amiga/Makefile.amigaos -j4 OMR=/path/to/OpenMRac DAT=/path/to/openmrac.dat [STOVE=...]
+#
+# OMR is upstream OpenMRac at the commit package/openmrac.lock names, with
+# amiga/patches applied; DAT is openmrac.dat made from OpenMRac-data by
+# tools/make_dat.py (package/build-amiga.sh fetches both and makes it).
+# STOVE is a GFOpenAmigaGCC 16.2.0-open6 stove: its prefix/ has the
+# compiler, the NDK and GFOpenGPU's SDL 2 and GL kit (prefix/m68k-amigaos).
+#
+# Upstream's own sound mixer (MiniAL, on SDL 2's audio) stands in for
+# OpenAL; amiga/compat/pict2_sdlimage.cpp reads the textures through
+# SDL_image instead of libjpeg and libpng.
+#
+# Output: build/amigaos/OpenMRac/ (the drawer: OpenMRac, Data/openmrac.dat,
+# User/ for the settings and the ghosts, ReadMe, the licences, with
+# GlowIcons), build/amigaos/OpenMRac.info and Install-OpenMRac beside them.
+
+OMR     ?= ../OpenMRac
+DAT     ?= ../openmrac.dat
+STOVE   ?= $(HOME)/AmiCradle/kitchen/stoves/os32-gcc16-open6
+PREFIX  ?= $(STOVE)/prefix
+SDL2KIT ?= $(PREFIX)/m68k-amigaos
+CC      = $(PREFIX)/bin/m68k-amigaos-gcc
+CXX     = $(PREFIX)/bin/m68k-amigaos-g++
+STRIP   = $(PREFIX)/bin/m68k-amigaos-strip
+# hard float: GFOpenGPU's SDL 2 and GL kit is built -m68881
+CPU     ?= -m68040 -m68881
+# -fno-tree-loop-distribute-patterns: GCC 16's loop miscompile (the kit's
+# sdl2-config gives it for GCC 16 too).
+OPT     ?= -O2 -fomit-frame-pointer -fno-tree-loop-distribute-patterns
+
+# USE_MINIAL: upstream's mixer instead of OpenAL; DIR_OPENMRAC_DAT: where
+# openmrac.dat is (upstream turns it into a string)
+DEFS    ?= -D__amigaos__ -DNDEBUG -DUSE_MINIAL -DDIR_OPENMRAC_DAT=PROGDIR:Data/
+INC     = -Iamiga/compat -I$(OMR)/src -Iamiga -I$(SDL2KIT)/include -I$(SDL2KIT)/include/SDL2
+# NOIX: libnix (tests/host builds with the host's C library: NOIX=)
+NOIX    ?= -noixemul
+CFLAGS  = $(NOIX) $(OPT) $(CPU) $(DEFS) $(INC)
+# upstream's Makefile.linux: C++20, no exceptions
+CXXFLAGS = $(CFLAGS) -std=c++20 -fno-exceptions
+LDFLAGS = $(NOIX) $(CPU)
+# libstdc++ on the open6 stove wants -lpthread -latomic
+LIBS    ?= -L$(SDL2KIT)/lib -lSDL2_image -lGL -lSDL2 -lpthread -latomic -lm
+
+BUILD   = build/amigaos
+OBJDIR  = $(BUILD)/obj
+OUT     = $(BUILD)/OpenMRac
+PROG    = OpenMRac
+
+# upstream's src/*.cpp, without the Windows files and the libpng and
+# libjpeg readers (amiga/compat/pict2_sdlimage.cpp is ours)
+GAME    = 3dm cam car2d collider controls cstring1 datkey fopendir gameaux gamemenu \
+          gamemng gamemng_frame gamemng_load gbuff_in ghost gltext gui guifont \
+          load_texture main mainmenu matmng minial octopus onelayout particles pict2 \
+          rand1 rbsolver settings_dat settingsdialog shadermng skysph soundmng triboxint
+OBJS    = $(addprefix $(OBJDIR)/src/,$(addsuffix .o,$(GAME))) \
+          $(OBJDIR)/amiga/pict2_sdlimage.o $(OBJDIR)/amiga/amiga_start.o
+
+all: $(OUT)/$(PROG) package
+
+$(BUILD)/$(PROG).debug: $(OBJS)
+	@mkdir -p $(BUILD)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+$(OUT)/$(PROG): $(BUILD)/$(PROG).debug
+	@mkdir -p $(OUT)
+	$(STRIP) -o $@ $<
+
+package: $(OUT)/$(PROG) AMIGA_PORT.md amiga/Licences.txt $(DAT)
+	mkdir -p $(OUT)/User $(OUT)/Data
+	cp $(DAT) $(OUT)/Data/openmrac.dat
+	cp AMIGA_PORT.md $(OUT)/ReadMe
+	cp $(OMR)/LICENSE $(OUT)/LICENSE.txt
+	cp $(OMR)/README.md $(OUT)/README-OpenMRac.txt
+	cp amiga/Licences.txt $(OUT)/Licences.txt
+	cp amiga/icons/OpenMRac.info amiga/icons/ReadMe.info $(OUT)/
+	for f in LICENSE.txt README-OpenMRac.txt Licences.txt; do \
+	    cp amiga/icons/ReadMe.info $(OUT)/$$f.info; done
+	cp amiga/icons/Data.info $(OUT)/User.info
+	cp amiga/icons/Data.info $(OUT)/Data.info
+	cp amiga/icons/OpenMRac-drawer.info $(BUILD)/OpenMRac.info
+	cp amiga/Install-OpenMRac amiga/Install-OpenMRac.info $(BUILD)/
+
+$(OBJDIR)/src/%.o: $(OMR)/src/%.cpp $(wildcard $(OMR)/src/*.h)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJDIR)/amiga/%.o: amiga/compat/%.cpp $(OMR)/src/pict2.h
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(OBJDIR)/amiga/%.o: amiga/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm -rf $(BUILD)
+
+.PHONY: all package clean

@@ -1,0 +1,22 @@
+OpenMRac: licences
+==================
+
+The game: OpenMRac by Vojtech Salajka (Franticware), the open source
+release of MultiRacer, https://github.com/Franticware/OpenMRac; big-endian
+work by Szilard Biro. "MultiRacer" is Franticware's name and is not used
+for this port.
+
+- The program is under the BSD 2-Clause licence (LICENSE.txt).
+- Data/openmrac.dat holds the game data from
+  https://github.com/Franticware/OpenMRac-data, under CC0 1.0 (public
+  domain), unchanged; its sounds are kept as the samples of their WAVE
+  files, as upstream keeps them.
+- SDL 2, SDL2_image and OpenGL (Mesa) are GFOpenUp's (LIBS:GFOpenGPU), not
+  in this drawer.
+- The Amiga port's own files (amiga/, AMIGA_PORT.md, package/, tools/,
+  tests/), among them the small stand-in for the GLM calls the game makes
+  (amiga/compat/glm) and the picture reader on SDL_image
+  (amiga/compat/pict2_sdlimage.cpp), are under the BSD 2-Clause licence,
+  like the game. The GlowIcon art is The AmiCradle Team's own.
+
+Copyright (c) 2026 AmiCradle Team.
