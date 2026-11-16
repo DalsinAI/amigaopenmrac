@@ -39,8 +39,9 @@ INC     = -Iamiga/compat -I$(OMR)/src -Iamiga -I$(SDL2KIT)/include -I$(SDL2KIT)/
 # NOIX: libnix (tests/host builds with the host's C library: NOIX=)
 NOIX    ?= -noixemul
 CFLAGS  = $(NOIX) $(OPT) $(CPU) $(DEFS) $(INC)
-# upstream's Makefile.linux: C++20, no exceptions
-CXXFLAGS = $(CFLAGS) -std=c++20 -fno-exceptions
+# upstream's Makefile.linux: C++20, no exceptions (gnu++20: libnix's math.h
+# gives M_PI only outside strict ISO)
+CXXFLAGS = $(CFLAGS) -std=gnu++20 -fno-exceptions
 LDFLAGS = $(NOIX) $(CPU)
 # libstdc++ on the open6 stove wants -lpthread -latomic
 LIBS    ?= -L$(SDL2KIT)/lib -lSDL2_image -lGL -lSDL2 -lpthread -latomic -lm
