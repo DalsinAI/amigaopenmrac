@@ -14,7 +14,8 @@ in the evening, against your own best lap's ghost or with up to four
 players on one split screen, on the keyboard or joysticks.
 
 Status: host tests pass (played through the keyboard on a virtual X
-display, on the host's OpenGL); not yet built in the stove or run in a lab.
+display, on the host's OpenGL); built in Cradle's os32-gcc16-open6 stove;
+not yet run in a lab.
 
 
 What you need
