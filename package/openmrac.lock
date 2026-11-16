@@ -1,0 +1,7 @@
+# Upstream OpenMRac (code) and OpenMRac-data at the commits this port builds.
+OMR_URL=https://github.com/Franticware/OpenMRac
+OMR_COMMIT=c301961d28eda40c2d30245160d87964b9cccd99
+OMR_VERSION=1.3
+OMR_DATA_URL=https://github.com/Franticware/OpenMRac-data
+OMR_DATA_COMMIT=e68c2bb7636d08668ed11c5862c923d3db41c0c2
+PORT_VERSION=1.3-gfos1

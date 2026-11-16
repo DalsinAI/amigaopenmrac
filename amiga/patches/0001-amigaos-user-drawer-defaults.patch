@@ -1,0 +1,69 @@
+diff --git a/src/fopendir.cpp b/src/fopendir.cpp
+index d3bff24..7b83cd9 100644
+--- a/src/fopendir.cpp
++++ b/src/fopendir.cpp
+@@ -4,7 +4,14 @@
+ FILE* fopenDir(const char* filename, const char* mode, const char* org, const char* app)
+ {
+     const char* noPath = "";
++#ifdef __amigaos__
++    /* the settings and the ghosts in the drawer's User drawer, which
++       amiga/amiga_start.c makes (an update keeps it) */
++    (void)org; (void)app;
++    const char* path = "PROGDIR:User/";
++#else
+     const char* path = SDL_GetPrefPath(org, app);
++#endif
+     if (path == 0)
+     {
+         path = noPath;
+diff --git a/src/settings_dat.cpp b/src/settings_dat.cpp
+index e664910..5e8ef78 100644
+--- a/src/settings_dat.cpp
++++ b/src/settings_dat.cpp
+@@ -13,11 +13,22 @@
+ const Sett_entry_base entry_base[] = {
+     {"renderer", DEFAULT_PROFILE, PROFILE_MIN, PROFILE_MAX, "0 - GL Compatibility, 1 - GL Core 3, 2 - GLES2"},
+     {"fullscreen", 0, 0, 1, "0 - windowed, 1 - fullscreen"},
++#ifdef __amigaos__
++    /* a 68040 and an RTG screen: a smaller picture, bilinear filtering,
++       22050 Hz and one player to start with (the menu changes them all) */
++    {"screen_x", 640, 0, UINT_MAX, "screen resolution"},
++    {"screen_y", 480, 0, UINT_MAX, ""},
++#else
+     {"screen_x", 1280, 0, UINT_MAX, "screen resolution"},
+     {"screen_y", 720, 0, UINT_MAX, ""},
++#endif
+     {"vsync", 1, 0, 1, "0 - vsync off, 1 - vsync on"},
+     {"antialiasing", 0, 0, 2, "0 - off, 1 - 2x, 2 - 4x"},
++#ifdef __amigaos__
++    {"texture_filter", 0, 0,
++#else
+     {"texture_filter", 1, 0,
++#endif
+ 
+ #ifdef DISABLE_ANISOTROPY
+     1
+@@ -29,14 +40,22 @@ ASSERT_ANISOTROPY
+     ,"0 - bilinear, 1 - trilinear, 2 - anisotropic"},
+     {"view_distance", 10, 0, 10, "10 - far (best), 0 - near"},
+     {"show_fps", 0, 0, 1, "0 - fps counter off, 1 - fps counter on"},
++#ifdef __amigaos__
++    {"freq", 0, 0, 2, "0 - 22050, 1 - 44100, 2 - 48000"},
++#else
+     {"freq", 2, 0, 2, "0 - 22050, 1 - 44100, 2 - 48000"},
++#endif
+     {"low_latency", 1, 0, 1, ""},
+     {"sound_volume", 100, 0, 100, "0 - 100"},
+     {"last_laps", 3, 1, 50, "last session"},
+     {"last_daytime", 0, 0, 1, "0 - day, 1 - evening"},
+     {"last_track", 0, 0, UINT_MAX, ""},
+     {"last_direction", 0, 0, 1, "0 - regular, 1 - reversed"},
++#ifdef __amigaos__
++    {"last_players", 1, 1, 4, ""},
++#else
+     {"last_players", 2, 1, 4, ""},
++#endif
+     {"last_carsel1", 0, 0, UINT_MAX, ""},
+     {"last_cartex1", 0, 0, UINT_MAX, ""},
+     {"last_carsel2", 0, 0, UINT_MAX, ""},
